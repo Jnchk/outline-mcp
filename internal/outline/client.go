@@ -126,22 +126,28 @@ func (c *Client) AuthInfo(ctx context.Context) (*User, error) {
 }
 
 func (c *Client) Collections(ctx context.Context, f CollectionFilter) ([]Collection, Pagination, error) {
+	in := map[string]any{"limit": f.Limit, "offset": f.Offset}
+	if f.Query != "" {
+		in["query"] = f.Query
+	}
 	var out []Collection
-	p, err := c.call(ctx, "collections.list", map[string]any{
-		"query": f.Query, "limit": f.Limit, "offset": f.Offset,
-	}, &out)
+	p, err := c.call(ctx, "collections.list", in, &out)
 	return out, p, err
 }
 
 func (c *Client) Documents(ctx context.Context, f DocumentFilter) ([]Document, Pagination, error) {
+	in := map[string]any{"limit": f.Limit, "offset": f.Offset}
+	if f.CollectionID != "" {
+		in["collectionId"] = f.CollectionID
+	}
+	if f.ParentDocumentID != "" {
+		in["parentDocumentId"] = f.ParentDocumentID
+	}
+	if f.Query != "" {
+		in["query"] = f.Query
+	}
 	var out []Document
-	p, err := c.call(ctx, "documents.list", map[string]any{
-		"collectionId":     f.CollectionID,
-		"parentDocumentId": f.ParentDocumentID,
-		"query":            f.Query,
-		"limit":            f.Limit,
-		"offset":           f.Offset,
-	}, &out)
+	p, err := c.call(ctx, "documents.list", in, &out)
 	return out, p, err
 }
 

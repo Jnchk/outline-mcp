@@ -232,3 +232,29 @@ func TestNonJSONBody(t *testing.T) {
 		t.Fatalf("err = %v", err)
 	}
 }
+
+func TestDocumentsOmitsEmptyFilters(t *testing.T) {
+	bodies := map[string]map[string]any{}
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var body map[string]any
+		json.NewDecoder(r.Body).Decode(&body)
+		bodies[r.URL.Path] = body
+		io.WriteString(w, `{"ok":true,"data":[],"pagination":{"total":0}}`)
+	}))
+	defer srv.Close()
+
+	c, _ := New(srv.URL, "secret", time.Second, false)
+	if _, _, err := c.Documents(context.Background(), DocumentFilter{Limit: 1}); err != nil {
+		t.Fatal(err)
+	}
+	if _, _, err := c.Collections(context.Background(), CollectionFilter{Limit: 1}); err != nil {
+		t.Fatal(err)
+	}
+	for path, body := range bodies {
+		for _, key := range []string{"collectionId", "parentDocumentId", "query"} {
+			if _, ok := body[key]; ok {
+				t.Fatalf("%s sent empty %s: %#v", path, key, body)
+			}
+		}
+	}
+}
