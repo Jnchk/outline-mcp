@@ -1,0 +1,6 @@
+/outline-mcp
+/bin/
+*.test
+*.out
+coverage.*
+.env
