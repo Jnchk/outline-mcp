@@ -204,3 +204,9 @@ func (c *Client) AbsoluteURL(p string) string {
 	}
 	return strings.TrimSuffix(c.base, "/api") + p
 }
+
+// DeleteDocument moves a document to the trash unless permanent is true.
+func (c *Client) DeleteDocument(ctx context.Context, id string, permanent bool) error {
+	_, err := c.call(ctx, "documents.delete", map[string]any{"id": id, "permanent": permanent}, nil)
+	return err
+}

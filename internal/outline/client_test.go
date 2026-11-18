@@ -258,3 +258,20 @@ func TestDocumentsOmitsEmptyFilters(t *testing.T) {
 		}
 	}
 }
+
+func TestDeleteDocumentPayload(t *testing.T) {
+	var body map[string]any
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		json.NewDecoder(r.Body).Decode(&body)
+		io.WriteString(w, `{"ok":true,"data":{}}`)
+	}))
+	defer srv.Close()
+
+	c, _ := New(srv.URL, "secret", time.Second, false)
+	if err := c.DeleteDocument(context.Background(), "d1", true); err != nil {
+		t.Fatal(err)
+	}
+	if body["id"] != "d1" || body["permanent"] != true {
+		t.Fatalf("payload = %#v", body)
+	}
+}

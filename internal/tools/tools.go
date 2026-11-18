@@ -57,6 +57,12 @@ func Register(srv *mcp.Server, d *Deps) {
 	}, d.createDocument)
 
 	add(srv, &mcp.Tool{
+		Name:        "delete_document",
+		Description: "Move a document to the trash; permanent deletion needs permanent=true and admin rights. Requires confirm='yes'.",
+		Annotations: write(true),
+	}, d.deleteDocument)
+
+	add(srv, &mcp.Tool{
 		Name:        "update_document",
 		Description: "Update a document's title or markdown text. Replacing text needs confirm: true; edit_mode append/prepend does not.",
 		Annotations: write(true),

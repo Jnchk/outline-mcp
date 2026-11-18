@@ -30,6 +30,7 @@ long markdown never travels through the model context.
 | `get_document` | metadata + markdown, clipped at 4000 chars unless `full` |
 | `create_document` | title, collection or parent, inline text or `text_upload_id` |
 | `update_document` | title/text; `edit_mode` replace (needs `confirm`), append, prepend |
+| `delete_document` | moves to trash; `permanent` + `confirm: "yes"` to erase |
 
 ## Staged uploads
 

@@ -18,6 +18,7 @@ import (
 type fakeState struct {
 	createBody map[string]any
 	updateBody map[string]any
+	deleteBody map[string]any
 }
 
 func fakeOutline(t *testing.T) (*httptest.Server, *fakeState) {
@@ -47,6 +48,10 @@ func fakeOutline(t *testing.T) (*httptest.Server, *fakeState) {
 	mux.HandleFunc("/api/documents.update", func(w http.ResponseWriter, r *http.Request) {
 		json.NewDecoder(r.Body).Decode(&st.updateBody)
 		writeJSON(w, `{"ok":true,"data":{"id":"d1","title":"Doc","url":"/doc/d1-abc"}}`)
+	})
+	mux.HandleFunc("/api/documents.delete", func(w http.ResponseWriter, r *http.Request) {
+		json.NewDecoder(r.Body).Decode(&st.deleteBody)
+		writeJSON(w, `{"ok":true,"data":{}}`)
 	})
 	srv := httptest.NewServer(mux)
 	t.Cleanup(srv.Close)
@@ -202,5 +207,37 @@ func TestWriteGuards(t *testing.T) {
 	out, isErr = call(t, cs2, "create_document", map[string]any{"title": "x"})
 	if !isErr || !strings.Contains(out, "collection_id or parent_document_id") {
 		t.Fatalf("missing parent = %q", out)
+	}
+}
+
+func TestDeleteDocument(t *testing.T) {
+	d, st := testDeps(t, false)
+	cs := connect(t, d)
+
+	out, isErr := call(t, cs, "delete_document", map[string]any{"id": "d1"})
+	if !isErr || !strings.Contains(out, "confirm='yes'") {
+		t.Fatalf("no confirm = %q (error=%t)", out, isErr)
+	}
+
+	out, isErr = call(t, cs, "delete_document", map[string]any{"id": "d1", "confirm": "yes"})
+	if isErr || !strings.Contains(out, "moved to trash") {
+		t.Fatalf("delete = %q (error=%t)", out, isErr)
+	}
+	if st.deleteBody["id"] != "d1" || st.deleteBody["permanent"] != false {
+		t.Fatalf("payload = %#v", st.deleteBody)
+	}
+
+	out, isErr = call(t, cs, "delete_document", map[string]any{"id": "d1", "confirm": "yes", "permanent": true})
+	if isErr || st.deleteBody["permanent"] != true {
+		t.Fatalf("permanent = %q payload=%#v", out, st.deleteBody)
+	}
+}
+
+func TestDeleteReadOnly(t *testing.T) {
+	d, _ := testDeps(t, true)
+	cs := connect(t, d)
+	out, isErr := call(t, cs, "delete_document", map[string]any{"id": "d1", "confirm": "yes"})
+	if !isErr || !strings.Contains(out, "read-only") {
+		t.Fatalf("read-only = %q", out)
 	}
 }
