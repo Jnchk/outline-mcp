@@ -9,13 +9,13 @@ description: Push long Markdown into an Outline document through mcp-gateway wit
 pass the returned id; only the id crosses the model context.
 
 ```bash
-python3 ~/.config/opencode/skills/mcp-upload/scripts/mcp_upload.py --server outline2 --path ./doc.md
+python3 ~/.config/opencode/skills/mcp-upload/scripts/mcp_upload.py --server outline --path ./doc.md
 # 9f1c0b7a4e2d4c3b8a5f6e7d0c1b2a39
 ```
 
 ```js
 await tools.gateway.call_tool({
-  server: "outline2",
+  server: "outline",
   tool: "create_document",
   arguments: {
     title: "Deployment notes",
@@ -27,8 +27,7 @@ await tools.gateway.call_tool({
 
 ## Rules
 
-- `--server` is the gateway upstream name for this Outline instance (`outline2` while comparing with the
-  existing server; rename after switching).
+- `--server` is the gateway upstream name for this Outline instance (`outline`).
 - `text` and `text_upload_id` are mutually exclusive.
 - Ids are single-use, valid for 15 minutes, UTF-8 only, bounded by `OUTLINE_MAX_UPLOAD`; a failed write
   keeps the id for a retry.
